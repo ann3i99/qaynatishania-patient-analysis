@@ -139,13 +139,45 @@ with tab3:
 with tab4:
     st.header("Hospital Statistics")
     
-    # ICU and Intubation stats
-    hospital_stats = pd.DataFrame({
-        "ICU": filtered_df["ICU"].value_counts(),
-        "INTUBATED": filtered_df["INTUBATED"].value_counts()
-    })
+    # Get intubation counts
+    intubation_counts = filtered_df["INTUBATED"].value_counts()
     
-    st.bar_chart(hospital_stats)
+    # Create enhanced bar chart using Plotly Express
+    fig = px.bar(
+        x=intubation_counts.index,
+        y=intubation_counts.values,
+        title="Number of Patients Requiring Intubation",
+        labels={"x": "Intubation Status", "y": "Number of Patients"},
+        color=intubation_counts.values,
+        color_continuous_scale="RdBu",  # Similar to coolwarm
+        text=intubation_counts.values  # Add value labels on bars
+    )
+    
+    # Customize the layout
+    fig.update_layout(
+        title_x=0.5,  # Center the title
+        title_font_size=20,
+        title_font_weight="bold",
+        xaxis_title_font=dict(size=14, family="Arial Bold"),
+        yaxis_title_font=dict(size=14, family="Arial Bold"),
+        xaxis_tickfont=dict(size=12),
+        yaxis_tickfont=dict(size=12),
+        yaxis_gridcolor="rgba(0,0,0,0.1)",
+        showlegend=False,
+        height=600
+    )
+    
+    # Customize bar appearance
+    fig.update_traces(
+        textposition="outside",
+        textfont=dict(size=14, color="black", family="Arial Bold"),
+        texttemplate="%{text:,.0f}",  # Format with commas
+        marker_line_color="black",
+        marker_line_width=1.2
+    )
+    
+    # Display the plot
+    st.plotly_chart(fig, use_container_width=True)
     
     # Show percentage metrics
     col1, col2 = st.columns(2)
