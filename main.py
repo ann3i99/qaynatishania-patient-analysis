@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 # Load the dataset
@@ -122,6 +123,112 @@ if not df.empty:
 else:
     st.warning("No data found for the selected filters.")
 
-# Basic Visualizations
-st.bar_chart(df["OUTCOME"].value_counts())
-st.pie_chart(df["SEX"].value_counts())
+# Age Group Analysis
+st.title("COVID-19 Age Group Analysis")
+
+# Define age bins and labels
+bins = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+labels = ["0-10", "11-20", "21-30", "31-40", "41-50", "51-60", "61-70", "71-80", "81-90", "91-100"]
+
+# Categorize AGE into bins
+df["Age Group"] = pd.cut(df["AGE"], bins=bins, labels=labels, right=True)
+
+# Count cases per age group
+age_distribution = df["Age Group"].value_counts().sort_index()
+
+# Create two columns for the analysis
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Interactive Age Group Selection")
+    # Dropdown for age group selection with counts
+    selected_group = st.selectbox(
+        "Select an Age Group:",
+        options=labels,
+        format_func=lambda x: f"{x} ({age_distribution.get(x, 0)} cases)"
+    )
+
+    # Show detailed statistics for selected group
+    if selected_group in age_distribution.index:
+        total_cases = age_distribution.sum()
+        group_cases = age_distribution[selected_group]
+        percentage = (group_cases / total_cases) * 100
+        
+        st.metric(
+            label=f"Cases in {selected_group}",
+            value=f"{group_cases:,}",
+            delta=f"{percentage:.1f}% of total"
+        )
+    else:
+        st.warning(f"No cases found in age group {selected_group}")
+
+with col2:
+    st.subheader("Most Affected Age Groups")
+    # Show top 3 most affected age groups
+    top_3_groups = age_distribution.nlargest(3)
+    for age_group, count in top_3_groups.items():
+        percentage = (count / age_distribution.sum()) * 100
+        st.metric(
+            label=f"#{list(top_3_groups.index).index(age_group) + 1}: {age_group}",
+            value=f"{count:,} cases",
+            delta=f"{percentage:.1f}% of total"
+        )
+
+# Interactive visualization
+st.subheader("Age Distribution Visualization")
+chart_type = st.radio(
+    "Select Chart Type:",
+    ["Bar Chart", "Line Chart", "Area Chart"],
+    horizontal=True
+)
+
+# Convert to DataFrame for better Streamlit visualization
+chart_data = pd.DataFrame({"Cases": age_distribution})
+
+if chart_type == "Bar Chart":
+    st.bar_chart(chart_data)
+elif chart_type == "Line Chart":
+    st.line_chart(chart_data)
+else:
+    st.area_chart(chart_data)
+
+# Additional Analysis
+st.subheader("Detailed Statistics")
+col3, col4, col5 = st.columns(3)
+
+with col3:
+    st.metric(
+        "Total Cases",
+        f"{age_distribution.sum():,}"
+    )
+
+with col4:
+    median_age_group = age_distribution.index[len(age_distribution.index) // 2]
+    st.metric(
+        "Median Age Group",
+        median_age_group
+    )
+
+with col5:
+    st.metric(
+        "Most Susceptible Group",
+        age_distribution.idxmax(),
+        delta=f"{(age_distribution.max() / age_distribution.sum() * 100):.1f}% of cases"
+    )
+
+# Show the full data table with sorting capability
+st.subheader("Complete Age Distribution Table")
+age_distribution_df = pd.DataFrame({
+    "Age Group": age_distribution.index,
+    "Number of Cases": age_distribution.values,
+    "Percentage": (age_distribution.values / age_distribution.sum() * 100).round(2)
+})
+age_distribution_df["Percentage"] = age_distribution_df["Percentage"].map("{:.2f}%".format)
+st.dataframe(
+    age_distribution_df,
+    column_config={
+        "Number of Cases": st.column_config.NumberColumn(format="{:,}"),
+    },
+    hide_index=True
+)
+
