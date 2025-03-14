@@ -155,11 +155,16 @@ with tab4:
     
     # Customize the layout
     fig.update_layout(
-        title_x=0.5,  # Center the title
-        title_font_size=20,
-        title_font_weight="bold",
-        xaxis_title_font=dict(size=14, family="Arial Bold"),
-        yaxis_title_font=dict(size=14, family="Arial Bold"),
+        title=dict(
+            text="Number of Patients Requiring Intubation",
+            x=0.5,
+            font=dict(
+                size=20,
+                family="Arial, bold"  # Using Arial bold font instead of font-weight
+            )
+        ),
+        xaxis_title_font=dict(size=14, family="Arial, bold"),
+        yaxis_title_font=dict(size=14, family="Arial, bold"),
         xaxis_tickfont=dict(size=12),
         yaxis_tickfont=dict(size=12),
         yaxis_gridcolor="rgba(0,0,0,0.1)",
@@ -213,4 +218,4 @@ with tab5:
     total_cases = len(filtered_df)
     for outcome, count in outcome_dist.items():
         percentage = (count / total_cases) * 100
-        st.metric(f"{outcome} Cases", f"{percentage:.1f}%", f"{count:,} cases")
+        st.metric(f"{outcome} Cases", f"{percentage:.1f}%", f"{count:,} cases")
